@@ -72,9 +72,15 @@ Ensure you have the following installed:
 - buy_logic(): Handles the logic for purchasing a property, if a player lands on an unowned property they can buy it
 
 # Customization
-For the purposes of testing the program, the number of players and starting cash can be edited using the script: 
-- Starting Money: Modify 'CASH = 2000' to adjust the initial cash. 
-- Number of Players: Change 'num_players = 4' to set how many people are in the game
+The banker and player are configured with command line arguments. Run `python banker.py --help` or `python player.py --help` to see every option.
+
+For the purposes of testing the program, the number of players and starting cash can be set when starting the banker, without editing the script:
+- Starting Money: `--cash 2000` sets the initial cash for each player.
+- Number of Players: `--players 4` sets how many people are in the game (1-10).
+
+These options override the values of the chosen unit test preset. For example, `python banker.py 2 -local --cash 3000 --players 3` runs test preset 2 on localhost with 3 players who each start with $3000.
+
+The unit tests for the argument parser can be run with `python -m unittest tests.test_args -v`.
 
 # Contributing
 Interested in adding to Terminal Monopoly? This is a beginner-friendly project that anyone should feel welcome to work on. Check out [CONTRIBUTING.md](CONTRIBUTING.md) for how to get started.
