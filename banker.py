@@ -3,6 +3,9 @@ import sys
 import os
 import threading
 import itertools
+from utils.args import parse_banker_args
+# Parse the command line first so --help and invalid arguments exit before the game loads
+ARGS = parse_banker_args() if __name__ == "__main__" else parse_banker_args([])
 # Start the loading animation in a separate thread
 loading = True
 def loading_animation() -> None:
@@ -91,7 +94,7 @@ def start_server() -> socket.socket:
     # Create a socket object
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-    if "-local" in sys.argv:
+    if ARGS.local:
         ip_address = "localhost"
         host = "localhost"
         port = 33333
@@ -153,7 +156,7 @@ def receiver_loop(port:int, is_oof_thread: bool = False) -> None:
     with socket.socket() as server:
         host = socket.gethostname()
         ip_address = socket.gethostbyname(host)
-        if "-local" in sys.argv:
+        if ARGS.local:
             ip_address = "localhost"
             port = 33333
         if is_oof_thread:
@@ -193,7 +196,7 @@ def receiver_loop(port:int, is_oof_thread: bool = False) -> None:
                     #     to_read.remove(reader) # remove from monitoring
                 if(len(to_read) == 1):
                     if not is_oof_thread:
-                        if "-stayopen" not in sys.argv:
+                        if not ARGS.stayopen:
                             add_to_output_area("Main", "All connections dropped. Receiver stopped.", COLORS.GREEN)
                             return
                         else:
@@ -261,11 +264,8 @@ def set_unittest() -> None:
     - No games added to the game manager.
           """ if ss.VERBOSE else "")
     
-    if len(sys.argv) > 1:
-        if sys.argv[1].isdigit(): # If a test number is provided as a command line argument
-            test = int(sys.argv[1])
-        else:
-            test = ss.get_valid_int("Enter a test number: ", allowed=[' '])
+    if ARGS.test is not None: # If a test number is provided as a command line argument
+        test = ARGS.test
     else: # If no command line argument is provided, ask for a test number
         test = ss.get_valid_int("Enter a test number: ", allowed=[' '])
     if test == "":
@@ -755,16 +755,21 @@ if __name__ == "__main__":
     os.system('cls' if os.name == 'nt' else 'clear')
     print("Welcome to Terminal Monopoly, Banker!")
 
-    if "-skipcalib" not in sys.argv and "-local" not in sys.argv:
+    if not ARGS.skipcalib and not ARGS.local:
         ss.calibrate_screen('banker')
 
-    if "-silent" in sys.argv:
+    if ARGS.silent:
         ss.VERBOSE = False
 
-    if "-debtok" in sys.argv:
+    if ARGS.debtok:
         DEBT_OK = True
 
     set_unittest() 
+    # Command line options take priority over the values chosen by the test preset
+    if ARGS.cash is not None:
+        STARTING_CASH = ARGS.cash
+    if ARGS.players is not None:
+        num_players = ARGS.players
     # set_gamerules()
     start_server()
     choose_colorset("DEFAULT_COLORS")
