@@ -5,6 +5,9 @@ import sys
 import socket
 import platform
 import threading
+from utils.args import parse_player_args
+# Parse the command line first so --help and invalid arguments exit before the game loads
+ARGS = parse_player_args() if __name__ == "__main__" else parse_player_args([])
 import utils.networking as net
 import utils.screenspace as ss
 import modules_directory.inventory as inv
@@ -118,7 +121,7 @@ def initialize(debug: bool = False, args: list = None) -> None:
                 print("The input name was not valid")
                 name = input("Player name: ")
         
-        if "localhost" not in sys.argv:
+        if not ARGS.local:
             ADDRESS = input("Enter Host IP: ").strip()
             while not validate_address(ADDRESS):
                 print("Invalid IP address. Please enter a valid IP address.")
@@ -518,26 +521,22 @@ if __name__ == "__main__":
     """
     Main driver function for player.
     """
-    if "-withnet" in sys.argv:
+    if ARGS.withnet:
         NET_COMMANDS_ENABLED = True
     
-    if "-local" in sys.argv:
+    if ARGS.local:
         initialize(True, ["Player", "localhost", "33333"])
-    elif(len(sys.argv) == 1 or sys.argv[1] != "-debug"):
+    elif ARGS.debug is None:
         initialize()
         ss.make_fullscreen()
-    elif sys.argv[1] == "-debug":
+    else:
         ss.DEBUG = True
 
-    if(len(sys.argv) >= 5): # Debug mode, with args (name, ip, port)
-        if sys.argv[3].count('.') == 3 and all(part.isdigit() and 0 <= int(part) <= 255 for part in sys.argv[3].split('.')):
-            initialize(True, [sys.argv[2], sys.argv[3], sys.argv[4]])
-            ss.DEBUG = True
-        else:
-            print("Invalid IP address format. Please use the format xxx.xxx.xxx.xxx")
-            sys.exit(1)    
+    if ARGS.debug: # Debug mode, with args (name, ip, port). Validated in utils/args.py
+        initialize(True, ARGS.debug)
+        ss.DEBUG = True
 
-    if not "-skipcalib" in sys.argv:
+    if not ARGS.skipcalib:
         ss.make_fullscreen()
         ss.auto_calibrate_screen()
         ss.calibrate_screen("player")
@@ -548,7 +547,7 @@ if __name__ == "__main__":
     ss.initialize_terminals(TERMINALS)
     ss.update_terminal(active_terminal.index, active_terminal.index)
 
-    if "-debug" in sys.argv:
+    if ARGS.debug is not None:
         for i in range(ss.HEIGHT + 10):
             ss.set_cursor(155, i)
             print(i)
